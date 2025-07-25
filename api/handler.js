@@ -46,7 +46,14 @@ exports.handler = async (event, context) => {
           if (pathname.startsWith(pathToMatch)) {
             // 构建目标 URL
             const targetUrl = new URL(backendUrl);
-            targetUrl.pathname = pathname;
+            
+            // 计算路径的剩余部分
+            const remainingPath = pathname.substring(pathToMatch.length);
+            // 确保路径以/开头或者为空
+            const finalPath = remainingPath.startsWith('/') || remainingPath === '' ? remainingPath : '/' + remainingPath;
+            
+            // 设置目标路径
+            targetUrl.pathname = targetUrl.pathname + finalPath;
             
             // 添加查询参数
             if (queryStringParameters) {
