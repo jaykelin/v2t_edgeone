@@ -1,9 +1,8 @@
 {
-  "redirects": [
+  "functions": [
     {
-      "source": "/",
-      "destination": "/api/redirect",
-      "type": 302
+      "path": "/*",
+      "entry": "functions/index.js"
     }
   ]
 }
