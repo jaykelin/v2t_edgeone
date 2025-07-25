@@ -2,7 +2,7 @@
   "redirects": [
     {
       "source": "/",
-      "destination": "${URL}",
+      "destination": "/api/redirect",
       "type": 302
     }
   ]

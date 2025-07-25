@@ -8,6 +8,7 @@ exports.handler = async (event, context) => {
   try {
     // 获取环境变量
     const BACKEND_URL = process.env.BACKEND_URL || '';
+    const REDIRECT_URL = process.env.URL || '';
     
     // 解析请求路径
     const pathname = path;
@@ -15,7 +16,20 @@ exports.handler = async (event, context) => {
     // 输出环境变量信息用于调试
     console.log('Environment variables:');
     console.log('BACKEND_URL:', BACKEND_URL);
+    console.log('URL (REDIRECT_URL):', REDIRECT_URL);
     console.log('Request path:', pathname);
+    
+    // 处理重定向逻辑
+    if (pathname === '/api/redirect' && REDIRECT_URL) {
+      console.log('Redirecting to:', REDIRECT_URL);
+      return {
+        statusCode: 302,
+        headers: {
+          'Location': REDIRECT_URL
+        },
+        body: ''
+      };
+    }
     
     // 后端服务转发逻辑
     if (BACKEND_URL) {

@@ -10,9 +10,10 @@
         <p>请在 EdgeOne Pages 控制台设置以下环境变量：</p>
         <ul>
           <li><code>BACKEND_URL</code>: 配置后端服务 URL，每行一个</li>
+          <li><code>URL</code>: 首页重定向的目标 URL</li>
         </ul>
+        <p>如果正确配置了 <code>URL</code> 环境变量，访问根路径时将重定向到该 URL。</p>
         <p>如果配置了 <code>BACKEND_URL</code>，请求将根据路径前缀转发到相应的后端服务。</p>
-        <p>首页重定向可通过 <code>edgeone.json</code> 配置文件中的 <code>redirects</code> 字段设置。</p>
       </div>
       
       <div class="container">
