@@ -13,6 +13,12 @@ exports.handler = async (event, context) => {
     // 解析请求路径
     const pathname = path;
     
+    // 输出环境变量信息用于调试
+    console.log('Environment variables:');
+    console.log('BACKEND_URL:', BACKEND_URL);
+    console.log('URL (REDIRECT_URL):', REDIRECT_URL);
+    console.log('Request path:', pathname);
+    
     // 1. 后端服务转发逻辑
     if (BACKEND_URL) {
       // 按行分割，并过滤掉空行
@@ -69,11 +75,13 @@ exports.handler = async (event, context) => {
     
     // 2. 首页重定向逻辑
     if (REDIRECT_URL && pathname === '/') {
+      console.log('Redirecting to:', REDIRECT_URL);
       const proxyResponse = await proxyUrl(REDIRECT_URL, pathname);
       return proxyResponse;
     }
     
     // 3. 返回 404
+    console.log('Returning 404 - Not Found');
     return {
       statusCode: 404,
       headers: { 'Content-Type': 'text/plain' },
