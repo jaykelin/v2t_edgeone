@@ -1,0 +1,14 @@
+{
+  "name": "v2tunnel-edgeone",
+  "version": "1.0.0",
+  "description": "A tunnel service for EdgeOne Pages",
+  "main": "api/handler.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {},
+  "keywords": ["edgeone", "proxy", "tunnel"],
+  "author": "Your Name",
+  "license": "MIT"
+}
