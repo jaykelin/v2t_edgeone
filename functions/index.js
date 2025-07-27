@@ -3,6 +3,12 @@ export async function onRequest(context) {
   const url = new URL(request.url);
   const pathname = url.pathname;
 
+  // 检查是否为WebSocket升级请求
+  const upgradeHeader = request.headers.get('Upgrade');
+  if (upgradeHeader === 'websocket') {
+    return handleWebSocketUpgrade(request, env, pathname);
+  }
+
   // 根据请求路径匹配相应的后端进行转发。
   if (env.BACKEND_URL) {
     // 按行分割，并过滤掉空行
@@ -55,6 +61,42 @@ export async function onRequest(context) {
     status: 404,
     headers: { 'Content-Type': 'text/plain' },
   });
+}
+
+// 处理WebSocket连接升级
+async function handleWebSocketUpgrade(request, env, pathname) {
+  if (env.BACKEND_URL) {
+    // 按行分割，并过滤掉空行
+    const backendUrls = env.BACKEND_URL.trim().split('\n').filter(line => line.trim() !== '');
+
+    for (const backendUrlString of backendUrls) {
+      try {
+        // 解析每行的 URL
+        const backendUrl = new URL(backendUrlString.trim());
+        const pathToMatch = backendUrl.pathname;
+
+        // 如果请求路径以配置的路径开头，则进行WebSocket转发
+        if (pathname.startsWith(pathToMatch)) {
+          // 创建目标WebSocket URL
+          const targetUrl = new URL(request.url);
+          targetUrl.hostname = backendUrl.hostname;
+          targetUrl.port = backendUrl.port;
+          targetUrl.protocol = backendUrl.protocol === 'https:' ? 'wss:' : 'ws:';
+
+          // 创建到后端WebSocket服务器的连接
+          const backendResponse = await fetch(targetUrl.href, request);
+          
+          return backendResponse;
+        }
+      } catch (e) {
+        // 如果 BACKEND_URL 中有无效的 URL，打印错误并忽略，以避免单行配置错误影响整个服务
+        console.error(`Invalid URL in BACKEND_URL: "${backendUrlString}"`, e);
+      }
+    }
+  }
+
+  // 如果没有匹配的后端，则返回错误
+  return new Response('WebSocket Upgrade Failed: No matching backend found', { status: 426 });
 }
 
 async function 代理URL(代理网址, 目标网址) {
