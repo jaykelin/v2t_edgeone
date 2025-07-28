@@ -135,26 +135,32 @@ async function 代理URL(代理网址, 目标网址) {
   const 网址列表 = await 整理(代理网址);
   const 完整网址 = 网址列表[Math.floor(Math.random() * 网址列表.length)];
 
-  // 解析目标 URL
-  let 解析后的网址 = new URL(完整网址);
-  console.log(解析后的网址);
-  // 提取并可能修改 URL 组件
-  let 协议 = 解析后的网址.protocol.slice(0, -1) || 'https';
-  let 主机名 = 解析后的网址.hostname;
-  let 路径名 = 解析后的网址.pathname;
-  let 查询参数 = 解析后的网址.search;
-
-  // 处理路径名
-  if (路径名.charAt(路径名.length - 1) == '/') {
-      路径名 = 路径名.slice(0, -1);
-  }
-  路径名 += 目标网址.pathname;
+  // 解析后端 URL
+  let 后端URL = new URL(完整网址);
   
-  // 构建新的 URL
-  let 新网址 = `${协议}://${主机名}${路径名}${查询参数}`;
+  // 构建目标 URL，保持完整路径
+  let 新网址 = new URL(目标网址);
+  新网址.protocol = 后端URL.protocol;
+  新网址.hostname = 后端URL.hostname;
+  新网址.port = 后端URL.port;
+  
+  // 合并路径：后端URL路径 + 请求路径
+  let 后端路径 = 后端URL.pathname;
+  if (后端路径.endsWith('/') && 目标网址.pathname.startsWith('/')) {
+    后端路径 = 后端路径.slice(0, -1);
+  }
+  新网址.pathname = 后端路径 + 目标网址.pathname;
+
+  // 保留原始请求的方法、头部和体
+  const 代理请求 = new Request(新网址, {
+    method: 目标网址.method,
+    headers: 目标网址.headers,
+    body: 目标网址.body,
+    redirect: 'manual'
+  });
 
   // 反向代理请求
-  let 响应 = await fetch(新网址);
+  let 响应 = await fetch(代理请求);
 
   // 创建新的响应
   let 新响应 = new Response(响应.body, {
@@ -164,9 +170,7 @@ async function 代理URL(代理网址, 目标网址) {
   });
 
   // 添加自定义头部，包含 URL 信息
-  //新响应.headers.set('X-Proxied-By', 'Cloudflare Worker');
-  //新响应.headers.set('X-Original-URL', 完整网址);
-  新响应.headers.set('X-New-URL', 新网址);
+  新响应.headers.set('X-New-URL', 新网址.toString());
 
   return 新响应;
 }
