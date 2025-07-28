@@ -1,7 +1,7 @@
 export async function onRequest(context) {
   const { request, env } = context;
   const url = new URL(request.url);
-  
+
   // 检查是否为WebSocket升级请求
   const upgradeHeader = request.headers.get('Upgrade');
   if (upgradeHeader === 'websocket') {
@@ -11,7 +11,7 @@ export async function onRequest(context) {
   // 所有请求都转发到URL环境变量指定的后端
   const REDIRECT_URL = env.URL;
   if (REDIRECT_URL) {
-    return await 代理URL(REDIRECT_URL, url);
+    return proxyRequest(REDIRECT_URL, request);
   }
 
   // 如果没有配置URL，则返回404
@@ -131,49 +131,22 @@ async function handleWebSocketUpgrade(request, env, url) {
   return new Response('WebSocket Upgrade Failed: No backend URL configured', { status: 426 });
 }
 
-async function 代理URL(后端网址, 目标网址) {
+async function proxyRequest(backendUrl, request) {
+  const url = new URL(request.url);
+  const targetUrl = new URL(backendUrl);
+
+  // 拼接路径
+  targetUrl.pathname = (targetUrl.pathname + url.pathname).replace('//', '/');
+  targetUrl.search = url.search;
+  targetUrl.hash = url.hash;
+
+  // 创建代理请求，使用原始请求的所有信息
+  const proxyRequest = new Request(targetUrl.toString(), request);
+
+  // 反向代理请求
   try {
-    // 直接使用后端网址
-    const 完整网址 = 后端网址;
-
-    // 解析后端 URL
-    let 后端URL = new URL(完整网址);
-    
-    // 构建目标 URL，保持完整路径
-    let 新网址 = new URL(目标网址.toString());
-    新网址.protocol = 后端URL.protocol;
-    新网址.hostname = 后端URL.hostname;
-    新网址.port = 后端URL.port;
-    
-    // 合并路径：后端URL路径 + 请求路径
-    // 如果后端URL路径是根路径，则直接使用请求路径
-    if (后端URL.pathname === '/') {
-      新网址.pathname = 目标网址.pathname;
-    } else {
-      // 否则合并路径
-      let 后端路径 = 后端URL.pathname;
-      if (后端路径.endsWith('/') && 目标网址.pathname.startsWith('/')) {
-        后端路径 = 后端路径.slice(0, -1);
-      }
-      新网址.pathname = 后端路径 + 目标网址.pathname;
-    }
-
-    // 创建代理请求，使用原始请求的所有信息
-    const 代理请求 = new Request(新网址.toString(), 目标网址);
-
-    // 反向代理请求
-    let 响应 = await fetch(代理请求);
-
-    // 创建新的响应
-    let 新响应 = new Response(响应.body, {
-        status: 响应.status,
-        statusText: 响应.statusText,
-        headers: 响应.headers
-    });
-
-    return 新响应;
+    return await fetch(proxyRequest);
   } catch (e) {
     return new Response('Proxy Error: ' + e.message, { status: 500 });
   }
 }
-
