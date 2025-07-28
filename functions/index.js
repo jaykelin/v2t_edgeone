@@ -35,16 +35,6 @@ async function handleWebSocketUpgrade(request, env, url) {
       targetUrl.port = backendUrl.port;
       targetUrl.protocol = backendUrl.protocol === 'https:' ? 'wss:' : 'ws:';
 
-      // 克隆并修改请求头部
-      const 请求头部 = new Headers(request.headers);
-      
-      // 移除可能导致问题的头部
-      请求头部.delete('host');
-      请求头部.delete('connection');
-      请求头部.delete('upgrade');
-      请求头部.delete('sec-websocket-key');
-      请求头部.delete('sec-websocket-version');
-
       // 创建WebSocket对
       const webSocketPair = new WebSocketPair();
       const [client, server] = Object.values(webSocketPair);
@@ -57,7 +47,7 @@ async function handleWebSocketUpgrade(request, env, url) {
         headers: {
           'Upgrade': 'websocket',
           'Connection': 'Upgrade',
-          ...Object.fromEntries(请求头部)
+          ...request.headers
         }
       });
 
@@ -143,7 +133,7 @@ async function handleWebSocketUpgrade(request, env, url) {
 
 async function 代理URL(后端网址, 目标网址) {
   try {
-    // 直接使用后端网址，不再使用整理函数
+    // 直接使用后端网址
     const 完整网址 = 后端网址;
 
     // 解析后端 URL
@@ -162,57 +152,18 @@ async function 代理URL(后端网址, 目标网址) {
     }
     新网址.pathname = 后端路径 + 目标网址.pathname;
 
-    // 克隆并修改请求头部
-    const 请求头部 = new Headers(目标网址.headers);
-    
-    // 移除可能导致问题的头部
-    请求头部.delete('host');
-    请求头部.delete('connection');
-    请求头部.delete('upgrade');
-    请求头部.delete('sec-websocket-key');
-    请求头部.delete('sec-websocket-version');
-    
-    // 保留原始请求的方法、头部和体（仅对非GET/HEAD请求）
-    const requestOptions = {
-      method: 目标网址.method,
-      headers: 请求头部,
-      redirect: 'manual'
-    };
-
-    // 只有当方法不是GET或HEAD时才添加body
-    if (目标网址.method !== 'GET' && 目标网址.method !== 'HEAD') {
-      requestOptions.body = 目标网址.body;
-    }
-
-    const 代理请求 = new Request(新网址.toString(), requestOptions);
+    // 创建代理请求，使用原始请求的所有信息
+    const 代理请求 = new Request(新网址.toString(), 目标网址);
 
     // 反向代理请求
     let 响应 = await fetch(代理请求);
-
-    // 克隆并修改响应头部
-    const 响应头部 = new Headers(响应.headers);
-    
-    // 移除可能导致跨域问题的头部
-    响应头部.delete('set-cookie');
-    响应头部.delete('connection');
-    响应头部.delete('transfer-encoding');
-    响应头部.delete('access-control-allow-origin');
-    响应头部.delete('access-control-allow-credentials');
-    响应头部.delete('access-control-allow-headers');
-    响应头部.delete('access-control-allow-methods');
-    
-    // 添加CORS头部
-    响应头部.set('access-control-allow-origin', '*');
 
     // 创建新的响应
     let 新响应 = new Response(响应.body, {
         status: 响应.status,
         statusText: 响应.statusText,
-        headers: 响应头部
+        headers: 响应.headers
     });
-
-    // 添加自定义头部，包含 URL 信息
-    新响应.headers.set('X-New-URL', 新网址.toString());
 
     return 新响应;
   } catch (e) {
