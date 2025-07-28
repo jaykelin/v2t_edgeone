@@ -135,44 +135,55 @@ async function 代理URL(代理网址, 目标网址) {
   const 网址列表 = await 整理(代理网址);
   const 完整网址 = 网址列表[Math.floor(Math.random() * 网址列表.length)];
 
-  // 解析后端 URL
-  let 后端URL = new URL(完整网址);
-  
-  // 构建目标 URL，保持完整路径
-  let 新网址 = new URL(目标网址);
-  新网址.protocol = 后端URL.protocol;
-  新网址.hostname = 后端URL.hostname;
-  新网址.port = 后端URL.port;
-  
-  // 合并路径：后端URL路径 + 请求路径
-  let 后端路径 = 后端URL.pathname;
-  if (后端路径.endsWith('/') && 目标网址.pathname.startsWith('/')) {
-    后端路径 = 后端路径.slice(0, -1);
+  try {
+    // 解析后端 URL
+    let 后端URL = new URL(完整网址);
+    
+    // 构建目标 URL，保持完整路径
+    let 新网址 = new URL(目标网址.toString());
+    新网址.protocol = 后端URL.protocol;
+    新网址.hostname = 后端URL.hostname;
+    新网址.port = 后端URL.port;
+    
+    // 合并路径：后端URL路径 + 请求路径
+    let 后端路径 = 后端URL.pathname;
+    if (后端路径.endsWith('/') && 目标网址.pathname.startsWith('/')) {
+      后端路径 = 后端路径.slice(0, -1);
+    }
+    新网址.pathname = 后端路径 + 目标网址.pathname;
+
+    // 保留原始请求的方法、头部和体（仅对非GET/HEAD请求）
+    const requestOptions = {
+      method: 目标网址.method,
+      headers: 目标网址.headers,
+      redirect: 'manual'
+    };
+
+    // 只有当方法不是GET或HEAD时才添加body
+    if (目标网址.method !== 'GET' && 目标网址.method !== 'HEAD') {
+      requestOptions.body = 目标网址.body;
+    }
+
+    const 代理请求 = new Request(新网址.toString(), requestOptions);
+
+    // 反向代理请求
+    let 响应 = await fetch(代理请求);
+
+    // 创建新的响应
+    let 新响应 = new Response(响应.body, {
+        status: 响应.status,
+        statusText: 响应.statusText,
+        headers: 响应.headers
+    });
+
+    // 添加自定义头部，包含 URL 信息
+    新响应.headers.set('X-New-URL', 新网址.toString());
+
+    return 新响应;
+  } catch (e) {
+    console.error('代理请求失败:', e);
+    return new Response('Proxy Error: ' + e.message, { status: 500 });
   }
-  新网址.pathname = 后端路径 + 目标网址.pathname;
-
-  // 保留原始请求的方法、头部和体
-  const 代理请求 = new Request(新网址, {
-    method: 目标网址.method,
-    headers: 目标网址.headers,
-    body: 目标网址.body,
-    redirect: 'manual'
-  });
-
-  // 反向代理请求
-  let 响应 = await fetch(代理请求);
-
-  // 创建新的响应
-  let 新响应 = new Response(响应.body, {
-      status: 响应.status,
-      statusText: 响应.statusText,
-      headers: 响应.headers
-  });
-
-  // 添加自定义头部，包含 URL 信息
-  新响应.headers.set('X-New-URL', 新网址.toString());
-
-  return 新响应;
 }
 
 async function 整理(内容) {
