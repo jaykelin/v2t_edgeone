@@ -1,14 +1,6 @@
 {
-  "name": "v2t-edgeone",
-  "version": "1.0.0",
-  "description": "EdgeOne Worker for URL forwarding and WebSocket proxy",
-  "main": "functions/index.js",
+  "name": "v2t_eo",
   "scripts": {
-    "build": "node build.js"
-  },
-  "keywords": [
-    "edgeone"
-  ],
-  "author": "OxJJW3",
-  "license": "MIT"
+    "build": "mkdir -p dist && echo '<!DOCTYPE html><html><body></body></html>' > dist/index.html && cp -r functions dist/"
+  }
 }
