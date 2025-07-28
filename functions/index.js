@@ -131,11 +131,11 @@ async function handleWebSocketUpgrade(request, env, url) {
   return new Response('WebSocket Upgrade Failed: No backend URL configured', { status: 426 });
 }
 
-async function 代理URL(代理网址, 目标网址) {
-  const 网址列表 = await 整理(代理网址);
-  const 完整网址 = 网址列表[Math.floor(Math.random() * 网址列表.length)];
-
+async function 代理URL(后端网址, 目标网址) {
   try {
+    // 直接使用后端网址，不再使用整理函数
+    const 完整网址 = 后端网址;
+
     // 解析后端 URL
     let 后端URL = new URL(完整网址);
     
@@ -181,22 +181,7 @@ async function 代理URL(代理网址, 目标网址) {
 
     return 新响应;
   } catch (e) {
-    console.error('代理请求失败:', e);
     return new Response('Proxy Error: ' + e.message, { status: 500 });
   }
 }
 
-async function 整理(内容) {
-  // 将制表符、双引号、单引号和换行符都替换为逗号
-  // 然后将连续的多个逗号替换为单个逗号
-  var 替换后的内容 = 内容.replace(/[\t|"'\r\n]+/g, ',').replace(/,+/g, ',');
-
-  // 删除开头和结尾的逗号（如果有的话）
-  if (替换后的内容.charAt(0) == ',') 替换后的内容 = 替换后的内容.slice(1);
-  if (替换后的内容.charAt(替换后的内容.length - 1) == ',') 替换后的内容 = 替换后的内容.slice(0, 替换后的内容.length - 1);
-
-  // 使用逗号分割字符串，得到地址数组
-  const 地址数组 = 替换后的内容.split(',');
-
-  return 地址数组;
-}
