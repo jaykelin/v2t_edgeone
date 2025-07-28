@@ -1,0 +1,8 @@
+{
+  "functions": [
+    {
+      "path": "/*",
+      "entry": "functions/index.js"
+    }
+  ]
+}
