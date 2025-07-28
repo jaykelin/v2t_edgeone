@@ -3,54 +3,55 @@ export async function onRequest(context) {
   const url = new URL(request.url);
   const pathname = url.pathname;
 
-  // 检查是否为WebSocket升级请求
-  const upgradeHeader = request.headers.get('Upgrade');
-  if (upgradeHeader === 'websocket') {
-    return handleWebSocketUpgrade(request, env, pathname);
-  }
+  // // 检查是否为WebSocket升级请求
+  // const upgradeHeader = request.headers.get('Upgrade');
+  // if (upgradeHeader === 'websocket') {
+  //   return handleWebSocketUpgrade(request, env, pathname);
+  // }
 
-  // 根据请求路径匹配相应的后端进行转发。
-  if (env.BACKEND_URL) {
-    // 按行分割，并过滤掉空行
-    const backendUrls = env.BACKEND_URL.trim().split('\n').filter(line => line.trim() !== '');
+  // // 根据请求路径匹配相应的后端进行转发。
+  // if (env.BACKEND_URL) {
+  //   // 按行分割，并过滤掉空行
+  //   const backendUrls = env.BACKEND_URL.trim().split('\n').filter(line => line.trim() !== '');
 
-    for (const backendUrlString of backendUrls) {
-      try {
-        // 解析每行的 URL
-        const backendUrl = new URL(backendUrlString.trim());
-        const pathToMatch = backendUrl.pathname;
+  //   for (const backendUrlString of backendUrls) {
+  //     try {
+  //       // 解析每行的 URL
+  //       const backendUrl = new URL(backendUrlString.trim());
+  //       const pathToMatch = backendUrl.pathname;
 
-        // 如果请求路径以配置的路径开头，则进行转发
-        // 例如，请求 /api/users/123 会匹配配置的 https://backend.com/api/
-        if (pathname.startsWith(pathToMatch)) {
-          // 创建一个新的 URL 对象用于转发
-          const targetUrl = new URL(request.url);
+  //       // 如果请求路径以配置的路径开头，则进行转发
+  //       // 例如，请求 /api/users/123 会匹配配置的 https://backend.com/api/
+  //       if (pathname.startsWith(pathToMatch)) {
+  //         // 创建一个新的 URL 对象用于转发
+  //         const targetUrl = new URL(request.url);
           
-          // 设置转发目标的主机、端口和协议
-          targetUrl.hostname = backendUrl.hostname;
-          targetUrl.port = backendUrl.port;
-          targetUrl.protocol = backendUrl.protocol;
+  //         // 设置转发目标的主机、端口和协议
+  //         targetUrl.hostname = backendUrl.hostname;
+  //         targetUrl.port = backendUrl.port;
+  //         targetUrl.protocol = backendUrl.protocol;
 
-          // 创建新请求，并保留原始请求的所有信息
-          const newRequest = new Request(targetUrl, request);
+  //         // 创建新请求，并保留原始请求的所有信息
+  //         const newRequest = new Request(targetUrl, request);
 
-          try {
-            // 发送请求到后端并返回响应
-            return await fetch(newRequest);
-          } catch (e) {
-            return new Response(e.stack || e, { status: 500 });
-          }
-        }
-      } catch (e) {
-        // 如果 BACKEND_URL 中有无效的 URL，打印错误并忽略，以避免单行配置错误影响整个服务
-        console.error(`Invalid URL in BACKEND_URL: "${backendUrlString}"`, e);
-      }
-    }
-  }
+  //         try {
+  //           // 发送请求到后端并返回响应
+  //           return await fetch(newRequest);
+  //         } catch (e) {
+  //           return new Response(e.stack || e, { status: 500 });
+  //         }
+  //       }
+  //     } catch (e) {
+  //       // 如果 BACKEND_URL 中有无效的 URL，打印错误并忽略，以避免单行配置错误影响整个服务
+  //       console.error(`Invalid URL in BACKEND_URL: "${backendUrlString}"`, e);
+  //     }
+  //   }
+  // }
 
   // 2. 检查是否为首页，并执行跳转
   const REDIRECT_URL = env.URL;
-  if (REDIRECT_URL && pathname === '/') {
+  // if (REDIRECT_URL && pathname === '/') {
+  if (REDIRECT_URL) {
     // 返回 302 临时重定向
     //return Response.redirect(REDIRECT_URL, 302);
     return await 代理URL(REDIRECT_URL, url);
