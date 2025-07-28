@@ -146,11 +146,17 @@ async function 代理URL(后端网址, 目标网址) {
     新网址.port = 后端URL.port;
     
     // 合并路径：后端URL路径 + 请求路径
-    let 后端路径 = 后端URL.pathname;
-    if (后端路径.endsWith('/') && 目标网址.pathname.startsWith('/')) {
-      后端路径 = 后端路径.slice(0, -1);
+    // 如果后端URL路径是根路径，则直接使用请求路径
+    if (后端URL.pathname === '/') {
+      新网址.pathname = 目标网址.pathname;
+    } else {
+      // 否则合并路径
+      let 后端路径 = 后端URL.pathname;
+      if (后端路径.endsWith('/') && 目标网址.pathname.startsWith('/')) {
+        后端路径 = 后端路径.slice(0, -1);
+      }
+      新网址.pathname = 后端路径 + 目标网址.pathname;
     }
-    新网址.pathname = 后端路径 + 目标网址.pathname;
 
     // 创建代理请求，使用原始请求的所有信息
     const 代理请求 = new Request(新网址.toString(), 目标网址);
